@@ -47,8 +47,7 @@ typedef NS_ENUM(NSInteger, ErrorCode) {
     
     // Check that passed object is actually NSDictionary
     if ([dictionary isKindOfClass:[NSDictionary class]]) {
-        NSMutableString *result = [[NSMutableString alloc] init];
-        return [serializer serializeObject:dictionary result:&result error:error];
+        return [serializer serializeObject:dictionary error:error];
     }
     else { // If not a dictionary then return error
         if (!!error) {
@@ -67,26 +66,27 @@ typedef NS_ENUM(NSInteger, ErrorCode) {
 }
 
 - (NSString *)serializeObject:(id)object
-                       result:(NSMutableString **)result
                         error:(NSError *__autoreleasing *)error {
+    NSMutableString *result = [[NSMutableString alloc] init];
+    NSString *tmpResult = @"";
     // Check that passed object has one of the supperted types and handle it appropriately
     if ([object isKindOfClass:[NSDictionary class]]) {
-        [self serializeNSDictionary:(NSDictionary *)object result:result error:error];
+        tmpResult = [self serializeNSDictionary:(NSDictionary *)object error:error];
     }
     else if ([object isKindOfClass:[NSArray class]]) {
-        [self serializeNSArray:(NSArray *)object result:result error:error];
+        tmpResult = [self serializeNSArray:(NSArray *)object error:error];
     }
     else if ([object isKindOfClass:[NSSet class]]) {
-        [self serializeNSSet:(NSSet *)object result:result error:error];
+        tmpResult = [self serializeNSSet:(NSSet *)object error:error];
     }
     else if ([object isKindOfClass:[NSNumber class]]) {
-        [self serializeNSNumber:(NSNumber *)object result:result];
+        tmpResult = [self serializeNSNumber:(NSNumber *)object];
     }
     else if ([object isKindOfClass:[NSNull class]]) {
-        [self serializeNSNull:(NSNull *)object result:result];
+        tmpResult = [self serializeNSNull:(NSNull *)object];
     }
     else if ([object isKindOfClass:[NSValue class]]) {
-        [self serializeCGRect:(NSValue *)object result:result error:error];
+        tmpResult = [self serializeCGRect:(NSValue *)object error:error];
     }
     else { // If the received object has unsupported type then return error
         if (!!error) {
@@ -101,14 +101,19 @@ typedef NS_ENUM(NSInteger, ErrorCode) {
         }
         return nil;
     }
-    return *result;
+    if (!!error && *error != nil) {
+        return nil;
+    }
+    else {
+        return [result stringByAppendingString:tmpResult];
+    }
 }
 
-- (void)serializeNSDictionary:(NSDictionary *)dictionary
-                       result:(NSMutableString **)result
+- (NSString *)serializeNSDictionary:(NSDictionary *)dictionary
                         error:(NSError *__autoreleasing *)error {
-    [*result appendString: @"{"];
-    [*result appendString:self.lineSeparator];
+    NSMutableString *result = [[NSMutableString alloc] init];
+    [result appendString:@"{"];
+    [result appendString:self.lineSeparator];
     self.depth++;
     NSArray *dictionaryKeys = [dictionary allKeys];
     for (id key in dictionaryKeys) {
@@ -124,13 +129,12 @@ typedef NS_ENUM(NSInteger, ErrorCode) {
                                              code:INVALID_KEY_TYPE
                                          userInfo:userInfo];
             }
-            *result = nil;
-            break;
+            return nil;
         }
         else {
-            [*result appendString: self.lineIndentation];
-            [*result appendFormat:@"%@%@%@: ", KEY_WRAPPER_SYMBOL, key, KEY_WRAPPER_SYMBOL];
-            [self serializeObject: dictionary[key] result:result error:error];
+            [result appendString:self.lineIndentation];
+            [result appendFormat:@"%@%@%@: ", KEY_WRAPPER_SYMBOL, key, KEY_WRAPPER_SYMBOL];
+            NSString *tmpResult = [self serializeObject:dictionary[key] error:error];
             // Check if serializeObject method was ended with error and handle it
             if (!!error && *error != nil) {
                 NSString *const failureReason =
@@ -141,65 +145,69 @@ typedef NS_ENUM(NSInteger, ErrorCode) {
                 *error = [NSError errorWithDomain:[*error domain]
                                              code:[*error code]
                                          userInfo:userInfo];
-                *result = nil;
-                break;
+                return nil;
             }
-            if (key != [dictionaryKeys lastObject]) {
-                [*result appendFormat: @"%@ ", ELEMENTS_SEPARATOR_SYMBOL];
-                [*result appendString:self.lineSeparator];
+            else {
+                [result appendString:tmpResult];
+                if (key != [dictionaryKeys lastObject]) {
+                    [result appendFormat:@"%@ ", ELEMENTS_SEPARATOR_SYMBOL];
+                    [result appendString:self.lineSeparator];
+                }
             }
         }
     }
     self.depth--;
-    [*result appendString:self.lineSeparator];
-    [*result appendString: self.lineIndentation];
-    [*result appendString: @"}"];
+    [result appendString:self.lineSeparator];
+    [result appendString:self.lineIndentation];
+    [result appendString:@"}"];
+    return result;
 }
 
-- (void)serializeNSArray:(NSArray *)array
-                  result:(NSMutableString **)result
+- (NSString *)serializeNSArray:(NSArray *)array
                    error:(NSError *__autoreleasing *)error {
-    [*result appendString: @"["];
+    NSMutableString *result = [[NSMutableString alloc] init];
+    [result appendString:@"["];
     if ([array count] > 0) {
-        [*result appendString:self.lineSeparator];
+        [result appendString:self.lineSeparator];
         self.depth++;
         for (id item in array) {
-            [*result appendString: self.lineIndentation];
-            [self serializeObject:item result:result error:error];
+            [result appendString:self.lineIndentation];
+            NSString *tmpResult = [self serializeObject:item error:error];
             // Check if serializeObject method was ended with error and handle it
             if (!!error && *error != nil) {
-                *result = nil;
-                break;
+                return nil;
             }
-            if (item != [array lastObject]) {
-                [*result appendFormat: @"%@ ", ELEMENTS_SEPARATOR_SYMBOL];
-                [*result appendString:self.lineSeparator];
+            else {
+                [result appendString:tmpResult];
+                if (item != [array lastObject]) {
+                    [result appendFormat:@"%@ ", ELEMENTS_SEPARATOR_SYMBOL];
+                    [result appendString:self.lineSeparator];
+                }
             }
         }
         self.depth--;
-        [*result appendString:self.lineSeparator];
-        [*result appendString:self.lineIndentation];
+        [result appendString:self.lineSeparator];
+        [result appendString:self.lineIndentation];
     }
-    [*result appendString: @"]"];
+    [result appendString:@"]"];
+    return result;
 }
 
-- (void)serializeNSSet:(NSSet *)set
-                result:(NSMutableString **)result
+- (NSString *)serializeNSSet:(NSSet *)set
                  error:(NSError *__autoreleasing *)error {
     NSArray *tempArray = [set allObjects];
-    [self serializeNSArray:tempArray result:result error:error];
+    return [self serializeNSArray:tempArray error:error];
 }
 
-- (void)serializeNSNumber:(NSNumber *)number result:(NSMutableString **)result {
-    [*result appendString: [number stringValue]];
+- (NSString *)serializeNSNumber:(NSNumber *)number {
+    return [number stringValue];
 }
 
-- (void)serializeNSNull:(NSNull *)null result:(NSMutableString **)result {
-    [*result appendString: @"null"];
+- (NSString *)serializeNSNull:(NSNull *)null {
+    return @"null";
 }
 
-- (void)serializeCGRect:(NSValue *)value
-                 result:(NSMutableString **)result
+- (NSString *)serializeCGRect:(NSValue *)value
                   error:(NSError *__autoreleasing *)error {
     // Check that NSValue actualy contains CGRect
     if (strcmp([value objCType], @encode(CGRect)) == 0) {
@@ -208,7 +216,7 @@ typedef NS_ENUM(NSInteger, ErrorCode) {
                                    @"height": @(rect.size.height),
                                    @"x": @(rect.origin.x),
                                    @"y": @(rect.origin.y)};
-        [self serializeNSDictionary:tempDict result:result error:nil];
+        return [self serializeNSDictionary:tempDict error:nil];
     }
     else {
         if (!!error) {
@@ -218,6 +226,7 @@ typedef NS_ENUM(NSInteger, ErrorCode) {
                                                  NSLocalizedString(failureReason, nil)};
             *error = [NSError errorWithDomain:ERROR_DOMAIN code:INVALID_NSVALUE userInfo:userInfo];
         }
+        return nil;
     }
 }
 
