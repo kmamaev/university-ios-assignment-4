@@ -19,8 +19,12 @@ int main(int argc, const char * argv[]) {
                                          @"spouse": [NSNull null]};
         NSString *serializedDictionary = [Serializer serializeDictionary:testDictionary
                                                                    error:&error];
-        NSLog(@"Serialized dictionary: %@", serializedDictionary);
-        NSLog(@"Error: %@", error);
+        if (!error) {
+            NSLog(@"Serialized dictionary: %@", serializedDictionary);
+        }
+        else {
+            NSLog(@"Error: %@", error);
+        }
         NSLog(@"--------------------");
         
         // Test case 2: Passed object is not a dictionary.
@@ -29,8 +33,12 @@ int main(int argc, const char * argv[]) {
         NSString *testDictionary2 = @"Not a dictionary";
         NSString *serializedDictionary2 = [Serializer serializeDictionary:testDictionary2
                                                                     error:&error2];
-        NSLog(@"Serialized dictionary: %@", serializedDictionary2);
-        NSLog(@"Error: %@", error2);
+        if (!error2) {
+            NSLog(@"Serialized dictionary: %@", serializedDictionary2);
+        }
+        else {
+            NSLog(@"Error: %@", error2);
+        }
         NSLog(@"--------------------");
         
         // Test case 3: Passed dictionary contains an object of invalid type.
@@ -39,8 +47,12 @@ int main(int argc, const char * argv[]) {
         NSDictionary *testDictionary3 = @{@1: @1, @2: @2, @3: @"Three"};
         NSString *serializedDictionary3 = [Serializer serializeDictionary:testDictionary3
                                                                     error:&error3];
-        NSLog(@"Serialized dictionary: %@", serializedDictionary3);
-        NSLog(@"Error: %@", error3);
+        if (!error3) {
+            NSLog(@"Serialized dictionary: %@", serializedDictionary3);
+        }
+        else {
+            NSLog(@"Error: %@", error3);
+        }
         NSLog(@"--------------------");
         
         // Test case 4: One of the keys has invalid type.
@@ -49,8 +61,12 @@ int main(int argc, const char * argv[]) {
         NSDictionary *testDictionary4 = @{@1: @1, @2: @2, [NSDate date]: @3};
         NSString *serializedDictionary4 = [Serializer serializeDictionary:testDictionary4
                                                                     error:&error4];
-        NSLog(@"Serialized dictionary: %@", serializedDictionary4);
-        NSLog(@"Error: %@", error4);
+        if (!error4) {
+            NSLog(@"Serialized dictionary: %@", serializedDictionary4);
+        }
+        else {
+            NSLog(@"Error: %@", error4);
+        }
         NSLog(@"--------------------");
         
         // Test case 5: NSValue doesn't contain CGRect.
@@ -60,8 +76,12 @@ int main(int argc, const char * argv[]) {
         NSDictionary *testDictionary5 = @{@"CGRect1": [NSValue valueWithPoint:testPoint]};
         NSString *serializedDictionary5 = [Serializer serializeDictionary:testDictionary5
                                                                     error:&error5];
-        NSLog(@"Serialized dictionary: %@", serializedDictionary5);
-        NSLog(@"Error: %@", error5);
+        if (!error5) {
+            NSLog(@"Serialized dictionary: %@", serializedDictionary5);
+        }
+        else {
+            NSLog(@"Error: %@", error5);
+        }
         NSLog(@"--------------------");
 
     }
