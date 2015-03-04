@@ -31,7 +31,7 @@ enum ErrorCode {
  * \returns The string with the result of serialization.
  */
 + (NSString *)serializeDictionary:(id)dictionary error:(NSError *__autoreleasing *)error {
-    return [self serializeDictionary:dictionary byOneLine:NO error:&*error];
+    return [self serializeDictionary:dictionary byOneLine:NO error:error];
 }
 
 /*!
@@ -60,7 +60,7 @@ enum ErrorCode {
     // Check that passed object is actually NSDictionary
     if ([dictionary isKindOfClass:[NSDictionary class]]) {
         NSMutableString *result = [[NSMutableString alloc] init];
-        return [self serializeObject:dictionary result:&result error:&*error];
+        return [self serializeObject:dictionary result:&result error:error];
     }
     else { // If not a dictionary then return error
         if (!!error) {
@@ -83,22 +83,22 @@ enum ErrorCode {
                         error:(NSError *__autoreleasing *)error {
     // Check that passed object has one of the supperted types and handle it appropriately
     if ([object isKindOfClass:[NSDictionary class]]) {
-        [self serializeNSDictionary:(NSDictionary *)object result:&*result error:&*error];
+        [self serializeNSDictionary:(NSDictionary *)object result:result error:error];
     }
     else if ([object isKindOfClass:[NSArray class]]) {
-        [self serializeNSArray:(NSArray *)object result:&*result error:&*error];
+        [self serializeNSArray:(NSArray *)object result:result error:error];
     }
     else if ([object isKindOfClass:[NSSet class]]) {
-        [self serializeNSSet:(NSSet *)object result:&*result error:&*error];
+        [self serializeNSSet:(NSSet *)object result:result error:error];
     }
     else if ([object isKindOfClass:[NSNumber class]]) {
-        [self serializeNSNumber:(NSNumber *)object result:&*result];
+        [self serializeNSNumber:(NSNumber *)object result:result];
     }
     else if ([object isKindOfClass:[NSNull class]]) {
-        [self serializeNSNull:(NSNull *)object result:&*result];
+        [self serializeNSNull:(NSNull *)object result:result];
     }
     else if ([object isKindOfClass:[NSValue class]]) {
-        [self serializeCGRect:(NSValue *)object result:&*result error:&*error];
+        [self serializeCGRect:(NSValue *)object result:result error:error];
     }
     else { // If the received object has unsupported type then return error
         if (!!error) {
@@ -142,7 +142,7 @@ enum ErrorCode {
         else {
             [*result appendString: [self buildLineIndentation]];
             [*result appendFormat:@"%@%@%@: ", KEY_WRAPPER_SYMBOL, key, KEY_WRAPPER_SYMBOL];
-            [self serializeObject: dictionary[key] result:&*result error:&*error];
+            [self serializeObject: dictionary[key] result:result error:error];
             // Check if serializeObject method was ended with error and handle it
             if (!!error && *error != nil) {
                 NSString *const failureReason =
@@ -177,7 +177,7 @@ enum ErrorCode {
         [self incrementDepth];
         for (id item in array) {
             [*result appendString: [self buildLineIndentation]];
-            [self serializeObject:item result:&*result error:&*error];
+            [self serializeObject:item result:result error:error];
             // Check if serializeObject method was ended with error and handle it
             if (!!error && *error != nil) {
                 *result = nil;
@@ -199,7 +199,7 @@ enum ErrorCode {
                 result:(NSMutableString **)result
                  error:(NSError *__autoreleasing *)error {
     NSArray *tempArray = [set allObjects];
-    [self serializeNSArray:tempArray result:&*result error:&*error];
+    [self serializeNSArray:tempArray result:result error:error];
 }
 
 + (void)serializeNSNumber:(NSNumber *)number result:(NSMutableString **)result {
@@ -216,11 +216,11 @@ enum ErrorCode {
     // Check that NSValue actualy contains CGRect
     if (strcmp([value objCType], @encode(CGRect)) == 0) {
         CGRect rect = [value rectValue];
-        NSDictionary *tempDict = @{@"width": [NSNumber numberWithFloat:rect.size.width],
-                                   @"height": [NSNumber numberWithFloat:rect.size.height],
-                                   @"x": [NSNumber numberWithFloat:rect.origin.x],
-                                   @"y": [NSNumber numberWithFloat:rect.origin.y]};
-        [self serializeNSDictionary:tempDict result:&*result error:nil];
+        NSDictionary *tempDict = @{@"width": @(rect.size.width),
+                                   @"height": @(rect.size.height),
+                                   @"x": @(rect.origin.x),
+                                   @"y": @(rect.origin.y)};
+        [self serializeNSDictionary:tempDict result:result error:nil];
     }
     else {
         if (!!error) {
