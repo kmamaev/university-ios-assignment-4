@@ -8,7 +8,7 @@ static NSString *const CONFIG_LINE_INDENTATION_KEY = @"Line indentation key";
 static NSString *const CONFIG_LINE_SEPARATOR_KEY = @"Line separator key";
 static NSString *const CONFIG_DEPTH_KEY = @"Depth key";
 static NSString *const ERROR_DOMAIN = @"ru.kostya.Serializer";
-enum ErrorCode {
+typedef NS_ENUM(NSInteger, ErrorCode) {
     UNSUPPORTED_PARAMETER = 1, // Passed object is not a dictionary
     OBJECT_OF_INVALID_TYPE = 2, // Passed dictionary contains an object of invalid type
     INVALID_KEY_TYPE = 3, // One of the keys has invalid type
