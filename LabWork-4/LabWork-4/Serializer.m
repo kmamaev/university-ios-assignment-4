@@ -31,7 +31,7 @@ enum ErrorCode {
  * \returns The string with the result of serialization.
  */
 + (NSString *)serializeDictionary:(id)dictionary error:(NSError *__autoreleasing *)error {
-    return [[self class] serializeDictionary:dictionary byOneLine:NO error:&*error];
+    return [self serializeDictionary:dictionary byOneLine:NO error:&*error];
 }
 
 /*!
@@ -52,7 +52,7 @@ enum ErrorCode {
                         byOneLine:(BOOL)isOneLined
                             error:(NSError *__autoreleasing *)error {
     // Setup depth
-    [[self class] setDepth:0];
+    [self setDepth:0];
  
     // Configure one line or multiline output option
     [self configureOutputOption:isOneLined];
@@ -60,7 +60,7 @@ enum ErrorCode {
     // Check that passed object is actually NSDictionary
     if ([dictionary isKindOfClass:[NSDictionary class]]) {
         NSMutableString *result = [[NSMutableString alloc] init];
-        return [[self class] serializeObject:dictionary result:&result error:&*error];
+        return [self serializeObject:dictionary result:&result error:&*error];
     }
     else { // If not a dictionary then return error
         if (!!error) {
@@ -83,22 +83,22 @@ enum ErrorCode {
                         error:(NSError *__autoreleasing *)error {
     // Check that passed object has one of the supperted types and handle it appropriately
     if ([object isKindOfClass:[NSDictionary class]]) {
-        [[self class] serializeNSDictionary:(NSDictionary *)object result:&*result error:&*error];
+        [self serializeNSDictionary:(NSDictionary *)object result:&*result error:&*error];
     }
     else if ([object isKindOfClass:[NSArray class]]) {
-        [[self class] serializeNSArray:(NSArray *)object result:&*result error:&*error];
+        [self serializeNSArray:(NSArray *)object result:&*result error:&*error];
     }
     else if ([object isKindOfClass:[NSSet class]]) {
-        [[self class] serializeNSSet:(NSSet *)object result:&*result error:&*error];
+        [self serializeNSSet:(NSSet *)object result:&*result error:&*error];
     }
     else if ([object isKindOfClass:[NSNumber class]]) {
-        [[self class] serializeNSNumber:(NSNumber *)object result:&*result];
+        [self serializeNSNumber:(NSNumber *)object result:&*result];
     }
     else if ([object isKindOfClass:[NSNull class]]) {
-        [[self class] serializeNSNull:(NSNull *)object result:&*result];
+        [self serializeNSNull:(NSNull *)object result:&*result];
     }
     else if ([object isKindOfClass:[NSValue class]]) {
-        [[self class] serializeCGRect:(NSValue *)object result:&*result error:&*error];
+        [self serializeCGRect:(NSValue *)object result:&*result error:&*error];
     }
     else { // If the received object has unsupported type then return error
         if (!!error) {
@@ -120,8 +120,8 @@ enum ErrorCode {
                        result:(NSMutableString **)result
                         error:(NSError *__autoreleasing *)error {
     [*result appendString: @"{"];
-    [*result appendString:[[self class] lineSeparator]];
-    [[self class] incrementDepth];
+    [*result appendString:[self lineSeparator]];
+    [self incrementDepth];
     NSArray *dictionaryKeys = [dictionary allKeys];
     for (id key in dictionaryKeys) {
         // Check that key of dictionary has supported type and return error if not
@@ -140,9 +140,9 @@ enum ErrorCode {
             break;
         }
         else {
-            [*result appendString: [[self class] buildLineIndentation]];
+            [*result appendString: [self buildLineIndentation]];
             [*result appendFormat:@"%@%@%@: ", KEY_WRAPPER_SYMBOL, key, KEY_WRAPPER_SYMBOL];
-            [[self class] serializeObject: dictionary[key] result:&*result error:&*error];
+            [self serializeObject: dictionary[key] result:&*result error:&*error];
             // Check if serializeObject method was ended with error and handle it
             if (!!error && *error != nil) {
                 NSString *const failureReason =
@@ -158,13 +158,13 @@ enum ErrorCode {
             }
             if (key != [dictionaryKeys lastObject]) {
                 [*result appendFormat: @"%@ ", ELEMENTS_SEPARATOR_SYMBOL];
-                [*result appendString:[[self class] lineSeparator]];
+                [*result appendString:[self lineSeparator]];
             }
         }
     }
-    [[self class] decrementDepth];
-    [*result appendString:[[self class] lineSeparator]];
-    [*result appendString: [[self class] buildLineIndentation]];
+    [self decrementDepth];
+    [*result appendString:[self lineSeparator]];
+    [*result appendString: [self buildLineIndentation]];
     [*result appendString: @"}"];
 }
 
@@ -173,11 +173,11 @@ enum ErrorCode {
                    error:(NSError *__autoreleasing *)error {
     [*result appendString: @"["];
     if ([array count] > 0) {
-        [*result appendString:[[self class] lineSeparator]];
-        [[self class] incrementDepth];
+        [*result appendString:[self lineSeparator]];
+        [self incrementDepth];
         for (id item in array) {
-            [*result appendString: [[self class] buildLineIndentation]];
-            [[self class] serializeObject:item result:&*result error:&*error];
+            [*result appendString: [self buildLineIndentation]];
+            [self serializeObject:item result:&*result error:&*error];
             // Check if serializeObject method was ended with error and handle it
             if (!!error && *error != nil) {
                 *result = nil;
@@ -185,12 +185,12 @@ enum ErrorCode {
             }
             if (item != [array lastObject]) {
                 [*result appendFormat: @"%@ ", ELEMENTS_SEPARATOR_SYMBOL];
-                [*result appendString:[[self class] lineSeparator]];
+                [*result appendString:[self lineSeparator]];
             }
         }
-        [[self class] decrementDepth];
-        [*result appendString:[[self class] lineSeparator]];
-        [*result appendString: [[self class] buildLineIndentation]];
+        [self decrementDepth];
+        [*result appendString:[self lineSeparator]];
+        [*result appendString: [self buildLineIndentation]];
     }
     [*result appendString: @"]"];
 }
@@ -199,7 +199,7 @@ enum ErrorCode {
                 result:(NSMutableString **)result
                  error:(NSError *__autoreleasing *)error {
     NSArray *tempArray = [set allObjects];
-    [[self class] serializeNSArray:tempArray result:&*result error:&*error];
+    [self serializeNSArray:tempArray result:&*result error:&*error];
 }
 
 + (void)serializeNSNumber:(NSNumber *)number result:(NSMutableString **)result {
@@ -220,7 +220,7 @@ enum ErrorCode {
                                    @"height": [NSNumber numberWithFloat:rect.size.height],
                                    @"x": [NSNumber numberWithFloat:rect.origin.x],
                                    @"y": [NSNumber numberWithFloat:rect.origin.y]};
-        [[self class] serializeNSDictionary:tempDict result:&*result error:nil];
+        [self serializeNSDictionary:tempDict result:&*result error:nil];
     }
     else {
         if (!!error) {
@@ -235,9 +235,9 @@ enum ErrorCode {
 
 + (NSString *)buildLineIndentation {
     NSMutableString *indentation = [[NSMutableString alloc] init];
-    NSInteger depth = [[self class] depth];
+    NSInteger depth = [self depth];
     for (int i = 0; i < depth; i++) {
-        [indentation appendString:[[self class] lineIndentation]];
+        [indentation appendString:[self lineIndentation]];
     }
     return indentation;
 }
@@ -270,11 +270,11 @@ enum ErrorCode {
 }
 
 + (void)incrementDepth {
-    [[self class] setDepth:[[self class] depth] + 1];
+    [self setDepth:[self depth] + 1];
 }
 
 + (void)decrementDepth {
-    [[self class] setDepth:[[self class] depth] - 1];
+    [self setDepth:[self depth] - 1];
 }
 
 @end
